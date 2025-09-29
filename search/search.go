@@ -39,7 +39,6 @@ func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 }
 
 func printResult(line, filePath string, indeces [][]int, lineNum int) {
-	fileName := fmt.Sprintf("%s%s%s", PURPLE, filePath, END)
 	coloredLine := ""
 	lastEnd := 0
 	starts := []int{}
@@ -55,7 +54,7 @@ func printResult(line, filePath string, indeces [][]int, lineNum int) {
 	coloredLine += line[lastEnd:]
 	coloredLine = strings.TrimSpace(coloredLine)
 	fmt.Printf("%s:%s:%s\t%s\n",
-		fileName,
+		fmt.Sprintf("%s%s%s", PURPLE, filePath, END),
 		fmt.Sprintf("%s%d%s", YELLOW, lineNum, END),
 		fmt.Sprintf("%s%d%s", GREEN, starts, END),
 		coloredLine,
