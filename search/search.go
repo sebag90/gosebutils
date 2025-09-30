@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 )
@@ -110,13 +111,26 @@ func Search(path, filePattern, searchPattern string, windowSize int) {
 		log.Printf("error walking the path: %v", err)
 	}
 
+	numWorkers := runtime.NumCPU() // use all cores
+	runtime.GOMAXPROCS(numWorkers)
+
 	var wg sync.WaitGroup
-	for _, filePath := range files {
+	jobs := make(chan string, numWorkers*2)
+
+	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
-		go func(fp string) {
+		go func() {
 			defer wg.Done()
-			searchInFile(fp, searchRegex, windowSize)
-		}(filePath)
-		wg.Wait()
+			for filePath := range jobs {
+				searchInFile(filePath, searchRegex, windowSize)
+			}
+		}()
 	}
+
+	for _, filePath := range files {
+		jobs <- filePath
+	}
+
+	close(jobs)
+	wg.Wait()
 }
