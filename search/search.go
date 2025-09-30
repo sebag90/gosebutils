@@ -21,6 +21,8 @@ const (
 	YELLOW = "\u001b[93m"
 )
 
+var printMutex sync.Mutex
+
 func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 	files := []string{}
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -40,7 +42,9 @@ func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 	return files, err
 }
 
-func printResult(line string, indeces [][]int, lineNum, windowSize int) {
+func printResult(line string, indeces [][]int, lineNum, windowSize int) []string {
+	results := []string{}
+
 	for _, m := range indeces {
 		start, end := m[0], m[1]
 		leftMargin := line[max(0, start-windowSize):start]
@@ -48,13 +52,13 @@ func printResult(line string, indeces [][]int, lineNum, windowSize int) {
 		coloredWord := fmt.Sprintf("%s%s%s", RED, line[start:end], END)
 		linetoDisplay := fmt.Sprintf("%s%s%s", leftMargin, coloredWord, rightMargin)
 
-		fmt.Printf("\t%s:%s\t%s\n",
+		results = append(results, fmt.Sprintf("\t%s:%s\t%s",
 			fmt.Sprintf("%s%d%s", YELLOW, lineNum, END),
 			fmt.Sprintf("%s%d%s", GREEN, start, END),
 			strings.TrimSpace(linetoDisplay),
-		)
+		))
 	}
-
+	return results
 }
 
 func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int) {
@@ -70,24 +74,33 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	buf := make([]byte, 0, 64*1024)       // initial buffer size
 	scanner.Buffer(buf, maxCapacity)
 
+	fileResults := []string{}
 	lineIndex := 1
-	filenamePrinted := false
 	for scanner.Scan() {
 		line := scanner.Text()
 		indeces := searchPattern.FindAllStringIndex(line, -1)
 		if indeces != nil {
-			if !filenamePrinted {
-				fmt.Printf("%s%s%s\n", PURPLE, filePath, END)
-				filenamePrinted = true
-			}
-			printResult(line, indeces, lineIndex, windowSize)
+			lineResult := printResult(line, indeces, lineIndex, windowSize)
+			fileResults = append(fileResults, lineResult...)
 		}
 		lineIndex++
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+	if len(fileResults) > 0 {
+		printMutex.Lock()
+		defer printMutex.Unlock()
+
+		fmt.Printf("%s%s%s\n", PURPLE, filePath, END)
+		for _, line := range fileResults {
+			fmt.Println(line)
+		}
 	}
+
+	if err := scanner.Err(); err != nil {
+		log.Printf("error Scanning file %s: %v", filePath, err)
+		return
+	}
+
 }
 
 func Search(path, filePattern, searchPattern string, windowSize int) {
