@@ -1,9 +1,8 @@
-package search
+package main
 
 import (
 	"bufio"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -25,12 +24,11 @@ var printMutex sync.Mutex
 
 func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 	files := []string{}
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		info, _ := os.Stat(path)
 		if !info.IsDir() {
 			if pattern.MatchString(path) {
 				files = append(files, path)

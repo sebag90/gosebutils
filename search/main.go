@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"sebutils/search"
 
 	"github.com/spf13/cobra"
 )
@@ -21,7 +20,7 @@ func main() {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			searchPattern := args[0]
-			search.Search(path, filePattern, searchPattern, windowSize)
+			Search(path, filePattern, searchPattern, windowSize)
 		},
 	}
 
