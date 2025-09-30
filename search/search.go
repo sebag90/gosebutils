@@ -27,7 +27,7 @@ func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 	files := []string{}
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return err // propagate error
+			return err
 		}
 
 		info, _ := os.Stat(path)
@@ -47,8 +47,15 @@ func printResult(line string, indeces [][]int, lineNum, windowSize int) []string
 
 	for _, m := range indeces {
 		start, end := m[0], m[1]
-		leftMargin := line[max(0, start-windowSize):start]
-		rightMargin := line[end:min(len(line), end+windowSize)]
+		leftMarginIndex := max(0, start-windowSize)
+		rightMarginIndex := min(len(line), end+windowSize)
+		if windowSize < 0 {
+			leftMarginIndex = 0
+			rightMarginIndex = len(line)
+		}
+
+		leftMargin := line[leftMarginIndex:start]
+		rightMargin := line[end:rightMarginIndex]
 		coloredWord := fmt.Sprintf("%s%s%s", RED, line[start:end], END)
 		linetoDisplay := fmt.Sprintf("%s%s%s", leftMargin, coloredWord, rightMargin)
 
@@ -70,8 +77,8 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	const maxCapacity = 1024 * 1024 * 100 // 1MB (adjust as needed)
-	buf := make([]byte, 0, 64*1024)       // initial buffer size
+	const maxCapacity = 1024 * 1024 * 100
+	buf := make([]byte, 0, 64*1024)
 	scanner.Buffer(buf, maxCapacity)
 
 	fileResults := []string{}
@@ -100,7 +107,6 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 		log.Printf("error Scanning file %s: %v", filePath, err)
 		return
 	}
-
 }
 
 func Search(path, filePattern, searchPattern string, windowSize int) {
