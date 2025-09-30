@@ -107,7 +107,12 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	}
 }
 
-func Search(path, filePattern, searchPattern string, windowSize int) {
+func Search(path, filePattern, searchPattern string, windowSize int, ignoreCase bool) {
+	if ignoreCase {
+		filePattern = "(?i)" + filePattern
+		searchPattern = "(?i)" + searchPattern
+	}
+
 	fileRegex := regexp.MustCompile(filePattern)
 	searchRegex := regexp.MustCompile(searchPattern)
 

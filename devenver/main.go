@@ -49,6 +49,5 @@ func main() {
 		}
 		return err
 	})
-
 	fmt.Printf("Total reclaimed space: %s%d MB%s\n", GREEN, totalReclaimedSpace, END)
 }

@@ -12,6 +12,7 @@ func main() {
 		path        string
 		filePattern string
 		windowSize  int
+		ignoreCase  bool
 	)
 
 	var rootCmd = &cobra.Command{
@@ -20,13 +21,14 @@ func main() {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			searchPattern := args[0]
-			Search(path, filePattern, searchPattern, windowSize)
+			Search(path, filePattern, searchPattern, windowSize, ignoreCase)
 		},
 	}
 
 	rootCmd.Flags().StringVar(&path, "path", ".", "Directory to search")
 	rootCmd.Flags().StringVar(&filePattern, "file-regex", ".", "regex pattern to filter files")
 	rootCmd.Flags().IntVar(&windowSize, "winsize", 10, "Size of the print window")
+	rootCmd.Flags().BoolVar(&ignoreCase, "ignore-case", false, "ignore case")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
