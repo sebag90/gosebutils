@@ -40,38 +40,21 @@ func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 	return files, err
 }
 
-func printResult(line, filePath string, indeces [][]int, lineNum, windowSize int) {
-	coloredLine := ""
-	lastEnd := 0
-	starts := []int{}
-	rightMarginSlide := 0
-
-	// assemble the colored line
+func printResult(line string, indeces [][]int, lineNum, windowSize int) {
 	for _, m := range indeces {
 		start, end := m[0], m[1]
-		coloredLine += line[lastEnd:start]
-		coloredLine += fmt.Sprintf("%s%s%s", RED, line[start:end], END)
-		lastEnd = end
-		starts = append(starts, start)
-		rightMarginSlide += len(RED) + len(END)
-	}
-	coloredLine += line[lastEnd:]
+		leftMargin := line[max(0, start-windowSize):start]
+		rightMargin := line[end:min(len(line), end+windowSize)]
+		coloredWord := fmt.Sprintf("%s%s%s", RED, line[start:end], END)
+		linetoDisplay := fmt.Sprintf("%s%s%s", leftMargin, coloredWord, rightMargin)
 
-	//calculate margin
-	leftMargin := 0
-	rightMargin := len(coloredLine)
-	if windowSize > 0 {
-		leftMargin = max(0, indeces[0][0]-windowSize)
-		rightMargin = min(len(coloredLine), indeces[len(indeces)-1][1]+windowSize+rightMarginSlide)
+		fmt.Printf("\t%s:%s\t%s\n",
+			fmt.Sprintf("%s%d%s", YELLOW, lineNum, END),
+			fmt.Sprintf("%s%d%s", GREEN, start, END),
+			strings.TrimSpace(linetoDisplay),
+		)
 	}
 
-	// print actual result
-	fmt.Printf("%s:%s:%s\t%s\n",
-		fmt.Sprintf("%s%s%s", PURPLE, filePath, END),
-		fmt.Sprintf("%s%d%s", YELLOW, lineNum, END),
-		fmt.Sprintf("%s%d%s", GREEN, starts, END),
-		strings.TrimSpace(coloredLine[leftMargin:rightMargin]),
-	)
 }
 
 func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int) {
@@ -88,11 +71,16 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	scanner.Buffer(buf, maxCapacity)
 
 	lineIndex := 1
+	filenamePrinted := false
 	for scanner.Scan() {
 		line := scanner.Text()
 		indeces := searchPattern.FindAllStringIndex(line, -1)
 		if indeces != nil {
-			printResult(line, filePath, indeces, lineIndex, windowSize)
+			if !filenamePrinted {
+				fmt.Printf("%s%s%s\n", PURPLE, filePath, END)
+				filenamePrinted = true
+			}
+			printResult(line, indeces, lineIndex, windowSize)
 		}
 		lineIndex++
 	}
@@ -110,8 +98,7 @@ func Search(path, filePattern, searchPattern string, windowSize int) {
 	if err != nil {
 		log.Printf("error walking the path: %v", err)
 	}
-
-	numWorkers := runtime.NumCPU() // use all cores
+	numWorkers := runtime.NumCPU() * 2
 	runtime.GOMAXPROCS(numWorkers)
 
 	var wg sync.WaitGroup
