@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 const (
@@ -26,12 +27,12 @@ func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 			return err // propagate error
 		}
 
-		if !d.IsDir() {
+		info, _ := os.Stat(path)
+		if !info.IsDir() {
 			if pattern.MatchString(path) {
 				files = append(files, path)
 			}
 		}
-
 		return nil
 	})
 
@@ -75,11 +76,16 @@ func printResult(line, filePath string, indeces [][]int, lineNum, windowSize int
 func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("error opening file %s: %v", filePath, err)
+		return
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
+	const maxCapacity = 1024 * 1024 * 100 // 1MB (adjust as needed)
+	buf := make([]byte, 0, 64*1024)       // initial buffer size
+	scanner.Buffer(buf, maxCapacity)
+
 	lineIndex := 1
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -101,9 +107,16 @@ func Search(path, filePattern, searchPattern string, windowSize int) {
 
 	files, err := collectPaths(path, fileRegex)
 	if err != nil {
-		log.Fatalf("error walking the path: %v", err)
+		log.Printf("error walking the path: %v", err)
 	}
+
+	var wg sync.WaitGroup
 	for _, filePath := range files {
-		searchInFile(filePath, searchRegex, windowSize)
+		wg.Add(1)
+		go func(fp string) {
+			defer wg.Done()
+			searchInFile(fp, searchRegex, windowSize)
+		}(filePath)
+		wg.Wait()
 	}
 }
