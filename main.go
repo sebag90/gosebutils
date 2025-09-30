@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	search.Search(".", "go", "search")
+	search.Search(".", "go", "search", 5)
 }
