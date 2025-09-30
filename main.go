@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	search.Search("../", ".", "search", 10)
+	search.Search(".", ".", "search", 10)
 }

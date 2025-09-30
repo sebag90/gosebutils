@@ -104,7 +104,7 @@ func Search(path, filePattern, searchPattern string, windowSize int) {
 	var wg sync.WaitGroup
 	jobs := make(chan string, numWorkers*2)
 
-	for i := 0; i < numWorkers; i++ {
+	for range numWorkers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
