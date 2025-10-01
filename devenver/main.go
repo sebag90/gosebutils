@@ -34,7 +34,7 @@ func main() {
 	var totalReclaimedSpace int64
 	filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return err
+			return nil
 		}
 		if d.IsDir() && filepath.Base(path) == ".venv" {
 			size, _ := DirSize(path)
@@ -43,6 +43,7 @@ func main() {
 			err := os.RemoveAll(path)
 
 			if err != nil {
+				fmt.Println(err)
 				return err
 			}
 			return fs.SkipDir
