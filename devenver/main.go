@@ -3,6 +3,7 @@ package main
 import (
 	"devenver/units"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -31,19 +32,22 @@ func DirSize(path string) (int64, error) {
 
 func main() {
 	var totalReclaimedSpace int64
-	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+	filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() {
-			if filepath.Base(path) == ".venv" {
-				size, _ := DirSize(path)
-				totalReclaimedSpace += size
-				fmt.Printf("%s%s%s\n", PURPLE, path, END)
-				os.RemoveAll(path)
+		if d.IsDir() && filepath.Base(path) == ".venv" {
+			size, _ := DirSize(path)
+			totalReclaimedSpace += size
+			fmt.Printf("%s%s%s\n", PURPLE, path, END)
+			err := os.RemoveAll(path)
+
+			if err != nil {
+				return err
 			}
+			return fs.SkipDir
 		}
-		return err
+		return nil
 	})
 	fmt.Printf("Total reclaimed space: %s%s%s\n", GREEN, units.HumanSize(float64(totalReclaimedSpace)), END)
 }
