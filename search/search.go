@@ -84,7 +84,6 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	for scanner.Scan() {
 		bytesLine := scanner.Bytes()
 		if !utf8.Valid(bytesLine) {
-			fmt.Println(filePath)
 			return
 		}
 		line := string(bytesLine)
@@ -98,12 +97,13 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 
 	if len(fileResults) > 0 {
 		printMutex.Lock()
-		defer printMutex.Unlock()
 
 		fmt.Printf("%s%s%s\n", PURPLE, filePath, END)
 		for _, line := range fileResults {
 			fmt.Println(line)
 		}
+
+		printMutex.Unlock()
 	}
 
 	if err := scanner.Err(); err != nil {
