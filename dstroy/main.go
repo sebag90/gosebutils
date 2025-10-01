@@ -18,12 +18,12 @@ const (
 func main() {
 	filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return err
+			return nil
 		}
 		if filepath.Base(path) == ".DS_Store" {
 			fmt.Printf("%s%s%s\n", PURPLE, path, END)
 			os.Remove(path)
 		}
-		return err
+		return nil
 	})
 }
