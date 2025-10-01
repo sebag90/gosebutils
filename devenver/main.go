@@ -1,6 +1,7 @@
 package main
 
 import (
+	"devenver/units"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,7 +15,7 @@ const (
 	YELLOW = "\u001b[93m"
 )
 
-func DirSize(path string) (int, error) {
+func DirSize(path string) (int64, error) {
 	var size int64
 	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -25,11 +26,11 @@ func DirSize(path string) (int, error) {
 		}
 		return err
 	})
-	return int(float64(size) / 1024.0 / 1024.0), err
+	return size, err
 }
 
 func main() {
-	totalReclaimedSpace := 0
+	var totalReclaimedSpace int64
 	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -39,12 +40,10 @@ func main() {
 				size, _ := DirSize(path)
 				totalReclaimedSpace += size
 				fmt.Printf("%s%s%s\n", PURPLE, path, END)
-
 				os.RemoveAll(path)
 			}
-
 		}
 		return err
 	})
-	fmt.Printf("Total reclaimed space: %s%d MB%s\n", GREEN, totalReclaimedSpace, END)
+	fmt.Printf("Total reclaimed space: %s%s%s\n", GREEN, units.HumanSize(float64(totalReclaimedSpace)), END)
 }
