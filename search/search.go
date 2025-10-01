@@ -26,7 +26,7 @@ func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 	files := []string{}
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return nil
 		}
 
 		if !info.IsDir() {
@@ -69,7 +69,6 @@ func printResult(line string, indeces [][]int, lineNum, windowSize int) []string
 func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Printf("error opening file %s: %v", filePath, err)
 		return
 	}
 	defer file.Close()
@@ -102,7 +101,6 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Printf("error Scanning file %s: %v", filePath, err)
 		return
 	}
 }
