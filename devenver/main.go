@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -31,12 +30,10 @@ func DirSize(path string) (int, error) {
 
 func main() {
 	totalReclaimedSpace := 0
-	filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
+	filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-
-		info, _ := os.Stat(path)
 		if info.IsDir() {
 			if filepath.Base(path) == ".venv" {
 				size, _ := DirSize(path)
