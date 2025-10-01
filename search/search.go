@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"unicode/utf8"
 )
 
 const (
@@ -81,7 +82,12 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	fileResults := []string{}
 	lineIndex := 1
 	for scanner.Scan() {
-		line := scanner.Text()
+		bytesLine := scanner.Bytes()
+		if !utf8.Valid(bytesLine) {
+			fmt.Println(filePath)
+			return
+		}
+		line := string(bytesLine)
 		indeces := searchPattern.FindAllStringIndex(line, -1)
 		if indeces != nil {
 			lineResult := printResult(line, indeces, lineIndex, windowSize)
