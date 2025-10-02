@@ -23,7 +23,7 @@ const (
 
 var printMutex sync.Mutex
 
-func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
+func collectPaths(root string, pattern, excludePattern *regexp.Regexp) ([]string, error) {
 	files := []string{}
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -32,7 +32,9 @@ func collectPaths(root string, pattern *regexp.Regexp) ([]string, error) {
 
 		if !info.IsDir() {
 			if pattern.MatchString(path) {
-				files = append(files, path)
+				if !excludePattern.MatchString(path) {
+					files = append(files, path)
+				}
 			}
 		}
 		return nil
@@ -111,7 +113,7 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	}
 }
 
-func Search(path, filePattern, searchPattern string, windowSize int, ignoreCase bool) {
+func Search(path, searchPattern, filePattern, excludeFilePattern string, windowSize int, ignoreCase bool) {
 	if ignoreCase {
 		filePattern = "(?i)" + filePattern
 		searchPattern = "(?i)" + searchPattern
@@ -119,8 +121,9 @@ func Search(path, filePattern, searchPattern string, windowSize int, ignoreCase 
 
 	fileRegex := regexp.MustCompile(filePattern)
 	searchRegex := regexp.MustCompile(searchPattern)
+	excludePattern := regexp.MustCompile(excludeFilePattern)
 
-	files, err := collectPaths(path, fileRegex)
+	files, err := collectPaths(path, fileRegex, excludePattern)
 	if err != nil {
 		log.Printf("error walking the path: %v", err)
 	}
