@@ -43,7 +43,7 @@ func collectPaths(root string, pattern, excludePattern *regexp.Regexp) ([]string
 	return files, err
 }
 
-func printResult(line string, indeces [][]int, lineNum, windowSize int) []string {
+func collectResult(line string, indeces [][]int, lineNum, windowSize int) []string {
 	results := []string{}
 
 	for _, m := range indeces {
@@ -69,7 +69,21 @@ func printResult(line string, indeces [][]int, lineNum, windowSize int) []string
 	return results
 }
 
-func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int) {
+func printResult(fileName string, results []string) {
+	printMutex.Lock()
+	fmt.Printf("%s%s%s\n", PURPLE, fileName, END)
+	for _, line := range results {
+		fmt.Println(line)
+	}
+	printMutex.Unlock()
+}
+
+func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int, nameOnly bool) {
+	if nameOnly {
+		printResult(filePath, []string{})
+		return
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return
@@ -91,21 +105,14 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 		line := string(bytesLine)
 		indeces := searchPattern.FindAllStringIndex(line, -1)
 		if indeces != nil {
-			lineResult := printResult(line, indeces, lineIndex, windowSize)
+			lineResult := collectResult(line, indeces, lineIndex, windowSize)
 			fileResults = append(fileResults, lineResult...)
 		}
 		lineIndex++
 	}
 
 	if len(fileResults) > 0 {
-		printMutex.Lock()
-
-		fmt.Printf("%s%s%s\n", PURPLE, filePath, END)
-		for _, line := range fileResults {
-			fmt.Println(line)
-		}
-
-		printMutex.Unlock()
+		printResult(filePath, fileResults)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -113,7 +120,7 @@ func searchInFile(filePath string, searchPattern *regexp.Regexp, windowSize int)
 	}
 }
 
-func Search(path, searchPattern, filePattern, excludeFilePattern string, windowSize int, ignoreCase bool) {
+func Search(path, searchPattern, filePattern, excludeFilePattern string, windowSize int, ignoreCase, nameOnly bool) {
 	if ignoreCase {
 		filePattern = "(?i)" + filePattern
 		searchPattern = "(?i)" + searchPattern
@@ -138,7 +145,7 @@ func Search(path, searchPattern, filePattern, excludeFilePattern string, windowS
 		go func() {
 			defer wg.Done()
 			for filePath := range jobs {
-				searchInFile(filePath, searchRegex, windowSize)
+				searchInFile(filePath, searchRegex, windowSize, nameOnly)
 			}
 		}()
 	}
