@@ -26,9 +26,9 @@ func main() {
 	}
 
 	rootCmd.Flags().StringVar(&path, "path", ".", "Directory to search")
-	rootCmd.Flags().StringVar(&filePattern, "file-regex", ".", "regex pattern to filter files")
-	rootCmd.Flags().IntVar(&windowSize, "winsize", 10, "Size of the print window")
-	rootCmd.Flags().BoolVar(&ignoreCase, "ignore-case", false, "ignore case")
+	rootCmd.Flags().StringVarP(&filePattern, "file-regex", "f", ".", "regex pattern to filter files")
+	rootCmd.Flags().IntVarP(&windowSize, "winsize", "w", 10, "Size of the print window")
+	rootCmd.Flags().BoolVarP(&ignoreCase, "ignore-case", "i", false, "ignore case")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
