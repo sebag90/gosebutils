@@ -17,8 +17,8 @@ func main() {
 	)
 
 	var rootCmd = &cobra.Command{
-		Use:   "sebsearch",
-		Short: "Search files in a directory",
+		Use:   "search",
+		Short: "Search files recursively in a directory",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			searchPattern := args[0]
