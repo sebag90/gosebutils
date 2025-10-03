@@ -1,13 +1,12 @@
+// taken from: https://github.com/docker/go-units/blob/master/size.go
 package units
 
 import (
 	"fmt"
 )
 
-// See: http://en.wikipedia.org/wiki/Binary_prefix
 const (
 	// Decimal
-
 	KB = 1000
 	MB = 1000 * KB
 	GB = 1000 * MB
@@ -15,7 +14,6 @@ const (
 	PB = 1000 * TB
 
 	// Binary
-
 	KiB = 1024
 	MiB = 1024 * KiB
 	GiB = 1024 * MiB
